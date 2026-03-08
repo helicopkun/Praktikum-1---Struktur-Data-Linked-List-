@@ -188,7 +188,7 @@ void ServisAnda() {
 
     cout << "====== Services =======" << endl;
     if (cur->TailServiceDue == NULL && cur->HeadServiceDone == NULL)
-        cout << "Belum ada servis";
+        cout << "Empti servis :C";
     else {
         Services(cur->TailServiceDue, "Customer", true, true);
         Services(cur->HeadServiceDone, "Customer", false, true);
@@ -376,6 +376,10 @@ Pilihan: )";
     system("cls");
     if (pilihan == "1") {
         cout << "====== All Services ======\n";
+        if (headHistoryDue == NULL) {
+            cout << "Empti :c\n\n";
+            return;
+        }
         Services(headHistoryDue, "All", false, true);
     }
     else if (pilihan == "2") {
@@ -383,6 +387,11 @@ Pilihan: )";
         NewService();
     }
     else if (pilihan == "3") {
+        if (headHistoryDue == NULL) {
+            cout << "====== Jobs Done======\n" 
+                 << "Empti :c\n\n";
+            return;
+        }
         int index;
         jumlahMontir = 0;
 
@@ -482,6 +491,10 @@ Pilihan: )";
     }
     else if (pilihan == "1") {
         cout << "====== All Services ======\n";
+        if (headHistoryDue == NULL) {
+            cout << "Antrean kosong!\n";
+            return;
+        }
         Services(headHistoryDue, "All", false, true);
     }
     else if (pilihan == "2") ServisAnda();
