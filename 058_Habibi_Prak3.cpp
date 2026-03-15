@@ -51,7 +51,8 @@ bool validPilihan,
 int indexMontir = 0;
 
 
-//Backend
+//---------------------------------------Backend stuffs-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//New
 bool NewMontirToList(string nama, Service* data_servis = NULL) { //add montir from back (skalian ngecek kesamaan), data_servis only for Due terlama
     Montir* bantuMontir = headMontir;
     bool baru = true;   
@@ -79,7 +80,7 @@ bool NewMontirToList(string nama, Service* data_servis = NULL) { //add montir fr
     }
     return baru;
 }
-
+//Updated
 void UpdateMontir(Service* Data, bool Due_and_Singular, bool Reverse = false) { //list montir tergantung data servis due or done, due&singular list, reverse = from tail, then -> prev
     Service* bantuServis = Data;
     if (bantuServis == NULL) return;
@@ -92,7 +93,7 @@ void UpdateMontir(Service* Data, bool Due_and_Singular, bool Reverse = false) { 
         else bantuServis = bantuServis->allnext;
     }
 }
-
+//New
 void ResetMontir() { //reset list montir
     indexMontir = 0;
     while (headMontir != NULL) { 
@@ -101,8 +102,8 @@ void ResetMontir() { //reset list montir
         delete temp;
     }
 }
-
-void ReadAllMontir() { //baca semua nama montir dalam file dan di simpan ke list
+//New
+void ReadAllMontir() { //baca semua nama montir dalam file dan di simpan ke linkedlist
     ResetMontir();
     ifstream data_montir ("Nama_Montir.txt");
     string namaMontir, space;
@@ -112,7 +113,7 @@ void ReadAllMontir() { //baca semua nama montir dalam file dan di simpan ke list
     }
     data_montir.close();
 }
-
+//simplified
 void TampilMechanic() {
     Montir* cur = headMontir;
 
@@ -121,7 +122,7 @@ void TampilMechanic() {
         cur = cur->next;
     }
 }
-
+//simplified
 string FindMechanicName(int indexInput) {
     Montir* cur = headMontir;
 
@@ -131,7 +132,7 @@ string FindMechanicName(int indexInput) {
     }
     return "Tidak ada";
 }
-
+//New
 void RewriteDue() {
     ofstream data_DueService("data_DueService3.txt", ios::trunc); //rewrite file due
     Service* cur = headHistoryDue;
@@ -146,7 +147,7 @@ void RewriteDue() {
     }
     data_DueService.close();
 }
-    
+//New
 void ReLinkDue(Service* Servis) { //re-link setelah di hapus dari list
     if (Servis->allprev != NULL) Servis->allprev->allnext = Servis->allnext;//per History
     else headHistoryDue = Servis->allnext;
@@ -162,8 +163,8 @@ void ReLinkDue(Service* Servis) { //re-link setelah di hapus dari list
 
     Servis->next = Servis->prev = Servis->allnext = Servis->allprev = NULL;//reset pointer
 }
-
-void AddDueList(Service* Servis, Customer* Pelanggan) { //add to back due - queue
+//New
+void AddDueList(Service* Servis, Customer* Pelanggan) { //add referenced node to back Due - queue
     // save to customer
     if (Pelanggan->HeadServiceDue == NULL)
         Pelanggan->HeadServiceDue = Pelanggan->TailServiceDue = Servis;
@@ -184,8 +185,8 @@ void AddDueList(Service* Servis, Customer* Pelanggan) { //add to back due - queu
     }
 
 }
-
-void AddDoneList(Service* Servis, Customer* Pelanggan) { //add to front done - stack
+//New
+void AddDoneList(Service* Servis, Customer* Pelanggan) { //add referenced node to front Done - stack
     // save to customer
     if (Pelanggan->HeadServiceDone == NULL)
         Pelanggan->HeadServiceDone = Pelanggan->TailServiceDone = Servis;
@@ -207,7 +208,8 @@ void AddDoneList(Service* Servis, Customer* Pelanggan) { //add to front done - s
 }
 
 
-//Frontend
+//----------------------------------------Frontend stuffs-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//tiny change
 bool NewCustomer(bool askName = true) { //tambah di belakang list - queue 
     if (askName) {
         cout << "Nama Pelanggan: ";
@@ -250,7 +252,7 @@ bool NewCustomer(bool askName = true) { //tambah di belakang list - queue
     data_customer3.close();
     return true;
 }
-
+//Big update
 void NewService(bool customer, Customer* Pelanggan = NULL) { //customer = dari customer atau tidak
     int index, antrian;
     string model, merek, kendala;
@@ -317,7 +319,7 @@ void NewService(bool customer, Customer* Pelanggan = NULL) { //customer = dari c
         }
     } 
     
-    antrian++; //karena berada di last of list (curService = NULL)
+    antrian++; //karena berada di last of list (curService = NULL), tambah karena membuat antrian baru
     Service *baruService = new Service;
     baruService->model_mobil = model;
     baruService->merek_mobil = merek;
@@ -343,10 +345,10 @@ void NewService(bool customer, Customer* Pelanggan = NULL) { //customer = dari c
     }
 
     if (customer) { //kalo dari "menu booking customer" tidak perlu cek / daftar ulang
-        if (Pelanggan->TailServiceDue == NULL) { //cek ada servis atau tidak
-            Pelanggan->HeadServiceDue = Pelanggan->TailServiceDue = baruService;
-        } else { // - queue
-            Pelanggan->TailServiceDue->next = baruService;
+        if (Pelanggan->TailServiceDue == NULL) { 
+            Pelanggan->HeadServiceDue = Pelanggan->TailServiceDue = baruService; // servis pertama
+        } else {
+            Pelanggan->TailServiceDue->next = baruService; // add queue
             baruService->prev = Pelanggan->TailServiceDue;
             Pelanggan->TailServiceDue = baruService;
         }
@@ -385,7 +387,7 @@ void NewService(bool customer, Customer* Pelanggan = NULL) { //customer = dari c
     << baruService->tanggal << endl << endl;
     data_DueService3.close();
 }
-
+//New
 void NewMontir() {
     string nama;
     ReadAllMontir();
@@ -405,7 +407,7 @@ void NewMontir() {
         cout << nama << " sudah terdaftar sebagai montir" << endl << endl;
     }
 }
-
+//tiny change
 void DisplayServices(Service* Data, string Customer_or_All, bool Reverse, bool loop = true, bool names = true) { //Tampilkan semua servis berdasarkan data
     Service* bantu = Data;                                  // Data = akses linkedlist mulai dari?
     if (bantu == NULL) {                                    // Customer_or_All = self-explanatory
@@ -438,7 +440,7 @@ void DisplayServices(Service* Data, string Customer_or_All, bool Reverse, bool l
         };
     } while (bantu != NULL && loop);
 }
-
+//added
 void Antrian(bool customer, Customer* Pelanggan = NULL) {
     cout << "====== All Services ======\n";
         if (headHistoryDue == NULL) {
@@ -465,7 +467,7 @@ void Antrian(bool customer, Customer* Pelanggan = NULL) {
             }
         }
 }
-
+//New
 void CancelService(Customer* Pelanggan) {
     bool valid;
     int index, pilihan;
@@ -532,7 +534,7 @@ void CancelService(Customer* Pelanggan) {
         << "Press enter to go back...";
     cin.get();
 }
-
+//New
 void UndoCancelService(Customer* Pelanggan) {
     string pilihan, tanggal;
     cout << "====== Booking Kembali Service ======" << endl << endl;
@@ -574,7 +576,7 @@ void UndoCancelService(Customer* Pelanggan) {
 
     } else UndoCancelService(Pelanggan);
 }
-
+//Updated
 void RiwayatCustomer(Customer* Pelanggan) { //riwayat servis anda
     cout << "====== Riwayat Servis Anda ======" << endl << endl;
 
@@ -586,7 +588,7 @@ void RiwayatCustomer(Customer* Pelanggan) { //riwayat servis anda
     }
     cout << endl << endl;
 }
-
+//Simplified
 void MechanicFinishJob(string nama) {
     string pilihan;
     if (nama == "Tidak ada") {
@@ -643,7 +645,7 @@ void MechanicJobsHistory(string nama) {
 }
 
 
-//menus
+//------------------------------------------ Menus ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
 void MenuServisAdmin() {
     string pilihan;
             cout << R"(====== Services ======
