@@ -18,7 +18,7 @@ struct Customer {
 }; //rupanya bisa deklarasi NULL dari awal bruh
 
 struct Service {
-    string model_mobil, merek_mobil, deskripsi_kendala, nama_montir, tanggal;
+    string model_mobil, merek_mobil, deskripsi_kendala, nama_montir, tanggal, kepentingan;
     Customer* dataCustomer = NULL;
     Service* next = NULL; //servis per customer
     Service* prev = NULL;
@@ -30,7 +30,7 @@ struct Montir {
     string namaMontir;
     int index;
     Montir* next = NULL;
-    Service* kerjaTerlamaDue = NULL;
+    Service* kerjaTerpentingDue = NULL;
 };
 
 Customer* headCustomer = NULL; //first in - first out (data terakhir = customer terakhir)

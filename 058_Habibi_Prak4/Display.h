@@ -1,13 +1,137 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
-#include "LinkedList.h"
+#include "Files_List.h"
+#include <iostream>
 
 bool validPilihan;
-string namaInput, noTelp;
 
-bool NewCustomer(bool askName = true) { //tambah di belakang list - queue 
-    if (askName) {
+void NewMontir() {
+    string nama;
+    ReadAllMontir();
+    cout << "====== New Mechanic ======" << endl
+        << "Masukkan Nama montir baru" << endl
+        << "Nama: ";
+    cin >> nama;
+    cin.ignore();
+    cout << endl;
+    
+    if (NewMontirToList(nama)) {
+        NewMontirFile(nama);
+        cout << nama << " telah ditambahkan ke daftar montir" << endl << endl;
+    } else {
+        cout << nama << " sudah terdaftar sebagai montir" << endl << endl;
+    }
+}
+
+void TampilMechanic() {
+    Montir* cur = headMontir;
+
+    while (cur != NULL) {
+        cout << cur->index << ". " << cur->namaMontir << endl;
+        cur = cur->next;
+    }
+}
+
+int PilihMontir(string Title) {
+    int index;
+    system("cls");
+    cout << "====== " << Title << " ======\n" <<
+    "Pilih Montir!\n\n";
+    TampilMechanic();                      
+    cout << "\nPilihan: ";
+    while (!(cin >> index)) { // Selama input BUKAN angka
+        system("cls");
+        cout << "====== " << Title << " ======\n" <<
+        "Pilih Montir!\n\n";
+        TampilMechanic();
+        cout << "\nPilihan: ";
+        cin.clear(); // 1. Bersihkan status error cin
+        cin.ignore(1000, '\n'); // 2. Buang karakter sampah di buffer (maks 1000 karakter)
+    }
+    cin.ignore(1000, '\n');
+    cout << endl;
+    validPilihan = true;
+    return index;
+}
+//p.s sort by date before checking
+string CheckDate(string new_date, Service* Servis = NULL, int count = 0){ // increment by 1 if not valid (check for entire due list)
+    if (count >= 5) {                                                        // returns new date
+        cout << "Tanggal sudah diundur sebanyak 5 kali, masukkan tanggal baru : ";
+        cin >> new_date;
+        cin.ignore();
+        return CheckDate(new_date, Servis);
+    }
+                                      
+    int hari_baru, bulan_baru, tahun_baru;
+    sscanf(new_date.c_str(), "%d-%d-%d", &hari_baru, &bulan_baru, &tahun_baru);
+    bool valid = true;
+    int hari, bulan, tahun;
+    
+    if (Servis) {
+        sscanf(Servis->tanggal.c_str(), "%d-%d-%d", &hari, &bulan, &tahun);
+        
+        if (tahun_baru < tahun) valid = false;
+        else if (tahun_baru == tahun){
+
+            if (bulan_baru < bulan) valid = false;
+            else if (bulan_baru == bulan){
+
+                if (hari_baru < hari) valid = false;
+            }
+        }
+        if (!valid){
+            hari_baru = hari + 1;
+            if (hari_baru > 30){
+                hari_baru = 1;
+                bulan_baru = bulan + 1;
+                if (bulan_baru > 12) {
+                    tahun_baru = tahun + 1;
+                }
+            } else {
+                bulan_baru = bulan;
+                tahun_baru = tahun;
+            }
+            cout << "\nTidak bisa sebelum jadwal awal anda.\n";
+        }
+    }
+    Service* cur = headHistoryDue;
+    while(cur != NULL){ // check all current 
+        sscanf(cur->tanggal.c_str(), "%d-%d-%d", &hari, &bulan, &tahun);
+        if (hari == hari_baru && bulan == bulan_baru && tahun == tahun_baru) {
+            if (count == 0) cout << "Tanggal sudah dijadwalkan oleh servis lain.\n";
+            valid = false;
+            break;
+        }
+        cur = cur->allnext;
+    }
+
+    if (valid) {  //base case
+        cout << "\nTanggal ambil yang baru adalah " << new_date << endl << endl;
+        return new_date;
+    }
+    else { 
+        hari_baru++;
+        if (hari_baru > 30) {
+            bulan_baru++;
+            hari_baru = 1;
+            if (bulan_baru > 12) {
+                tahun_baru++;
+            }
+        }
+        char buffer [20];
+        sprintf(buffer, "%02d-%02d-%02d", hari_baru, bulan_baru, tahun_baru);
+        new_date = buffer;
+        count++;
+        cout << "\nTanggal diundur " << count << " hari setelah tanggal baru...";
+        return CheckDate(new_date, Servis, count);
+    }
+}
+
+bool NewCustomer(bool AskName) { //tambah di belakang list - queue
+    string namaInput;
+
+    if (AskName) {
         cout << "Nama Pelanggan: ";
         getline(cin, namaInput);
     }
@@ -31,14 +155,14 @@ bool NewCustomer(bool askName = true) { //tambah di belakang list - queue
     getline(cin, baruCustomer->gender);
     
     baruCustomer->nama = namaInput;
-    AddCustomer(baruCustomer);
+    AddCustomerFile(baruCustomer);
 
     return true;
 }
 
-void NewService(bool customer, Customer* Pelanggan = NULL) { //customer = dari customer atau tidak
+void NewService(Customer* Pelanggan = NULL) {
     int index, antrian;
-    string model, merek, kendala;
+    string namaInput, model, merek, kendala;
 
     cout << "====== New Service ======" << endl;
     cout << "Model Mobil: ";
@@ -50,6 +174,7 @@ void NewService(bool customer, Customer* Pelanggan = NULL) { //customer = dari c
 
     //cek data servis due, kalo SAMA update
     bool sudahAda = false, askName = true;
+    SortByQueue();
     Service* curService = headHistoryDue;
     if (curService != NULL) { //cek mobil sama dari semua semua servis (menu admin)
         antrian = 1;
@@ -60,8 +185,9 @@ void NewService(bool customer, Customer* Pelanggan = NULL) { //customer = dari c
                     askName = false;
                     cout << "Nama Pelanggan: ";
                     getline(cin, namaInput);
-                }
-                while (curService != NULL) { //cek lagi 
+                } else namaInput = Pelanggan->nama;
+
+                while (curService != NULL) { //cek lagi (lanjut khusus ketika tau namaInput)
                     if (namaInput == curService->dataCustomer->nama && 
                         model == curService->model_mobil && 
                         merek == curService->merek_mobil) {
@@ -107,33 +233,36 @@ void NewService(bool customer, Customer* Pelanggan = NULL) { //customer = dari c
     baruService->model_mobil = model;
     baruService->merek_mobil = merek;
     baruService->deskripsi_kendala = kendala;
-    cout << "Tanggal Masuk: ";
-    getline(cin, baruService->tanggal);
 
     ReadAllMontir();
-
     cout << "Pilih Montir: " << endl;
     TampilMechanic();
     cout << "Pilihan: ";
     cin >> index;
     cin.ignore(); // ts is the reason i wasted 2 hours of my life
-
     baruService->nama_montir = FindMechanicName(index);
-    
-    if (headHistoryDue == NULL) headHistoryDue = tailHistoryDue = baruService; //first in history
-    else {
-        tailHistoryDue->allnext = baruService; //save ke history - di akhir list (queue)
-        baruService->allprev = tailHistoryDue;
-        tailHistoryDue = baruService;
-    }
 
+    cout << "Kepentingan: ";
+    getline(cin, baruService->kepentingan);
+    
+    string tanggal;
+    cout << "Tanggal Ambil: ";
+    getline(cin, tanggal);
+    SortByDate();
+
+    if (Pelanggan)
+        baruService->tanggal = CheckDate(tanggal, Pelanggan->HeadServiceDue);
+    else
+        baruService->tanggal = CheckDate(tanggal);
+
+    
     if (Pelanggan) { //kalo dari "menu booking customer" tidak perlu cek / daftar ulang
-        AddService(Pelanggan, baruService);
+        AddDueFile(baruService, Pelanggan);
         cout << "Servis sudah tercatat, nomor antrian anda adalah: " << antrian << "\n\n\n";
     
     } else {
         if (NewCustomer(askName)) { //customer baru :D  (dari menu admin servis)
-            AddService(tailCustomer, baruService);
+            AddDueFile(baruService, tailCustomer);
             cout << "\n\nPelanggan baru dan servis sudah tercatat, nomor antrian " << namaInput << " adalah: " << antrian << "\n\n\n";
         
         } else { //customer lama
@@ -143,29 +272,9 @@ void NewService(bool customer, Customer* Pelanggan = NULL) { //customer = dari c
                 cur = cur->next;
             } //save per customer - di akhir list (queue)
             
-            AddService(cur, baruService);
+            AddDueFile(baruService, cur);
             cout << "\n\nServis sudah tercatat, nomor antrian " << namaInput << " adalah: " << antrian << "\n\n\n";
         }
-    }
-}
-
-void NewMontir() {
-    string nama;
-    ReadAllMontir();
-    cout << "====== New Mechanic ======" << endl
-        << "Masukkan Nama montir baru" << endl
-        << "Nama: ";
-    cin >> nama;
-    cin.ignore();
-    cout << endl;
-    
-    if (NewMontirToList(nama)) {
-        ofstream nama_montir ("../Nama_Montir.txt", ios::app);
-        nama_montir << nama << endl;
-        nama_montir.close();
-        cout << nama << " telah ditambahkan ke daftar montir" << endl << endl;
-    } else {
-        cout << nama << " sudah terdaftar sebagai montir" << endl << endl;
     }
 }
 
@@ -180,13 +289,14 @@ void DisplayServices(Service* Data, string Customer_or_All, bool Reverse, bool l
         "Model Mobil: " << bantu->model_mobil << endl << 
         "Merek Mobil: " << bantu->merek_mobil << endl <<
         "Kendala: " << bantu->deskripsi_kendala << endl << 
-        "Montir: " << bantu->nama_montir << endl <<
-        "Tanggal masuk: " << bantu->tanggal << endl;
+        "Montir: " << bantu->nama_montir << endl;
         if (names) { 
-            cout <<
-            "Nama Pelanggan: " << bantu->dataCustomer->nama << endl << 
-            "No Telp Pelanggan: " << bantu->dataCustomer->nomor_telepon << endl;
+            cout << endl <<
+            "Nama Pelanggan: " << bantu->dataCustomer->nama << endl <<
+            //"No Telp Pelanggan: " << bantu->dataCustomer->nomor_telepon << endl;
+            "Kepentingan: " << bantu->kepentingan << endl;
         }
+        cout << "Tanggal Ambil: " << bantu->tanggal << endl;
 
         cout <<
         "-----------------------\n\n";
@@ -202,7 +312,7 @@ void DisplayServices(Service* Data, string Customer_or_All, bool Reverse, bool l
     } while (bantu != NULL && loop);
 }
 
-void Antrian(bool customer, Customer* Pelanggan = NULL) {
+void Antrian(Customer* Pelanggan = NULL) {
     cout << "====== All Services ======\n";
         if (headHistoryDue == NULL) {
             cout << "Empti :C\n\n";
@@ -211,7 +321,7 @@ void Antrian(bool customer, Customer* Pelanggan = NULL) {
         DisplayServices(headHistoryDue, "All", false);
         cout << endl;
 
-        if (customer) {
+        if (Pelanggan) {
             if (Pelanggan->HeadServiceDue == NULL) {
                 cout << "Anda tidak memiliki antrian" << endl << endl;
                 return;
@@ -229,6 +339,125 @@ void Antrian(bool customer, Customer* Pelanggan = NULL) {
         }
 }
 
+void AntrianDisplay(Customer* Pelanggan = NULL){ //full display
+    char sort;
+    SortByQueue();
+    Antrian(Pelanggan);
+    cout << "[D]ate [U]rgency [Q]ueue [E]xit" << endl <<
+            "Sort by:";
+    while (cin >> sort){
+        system("cls");
+        sort = (char)toupper(sort);
+        if (sort == 'E') break;
+        else if (sort == 'Q') SortByQueue();
+        else if (sort == 'D') SortByDate();
+        else if (sort == 'U') SortByUrgency();
+        else {
+            Antrian(Pelanggan);
+            cout << "[D]ate [U]rgency [Q]ueue [E]xit" << endl <<
+                "Sort by:";
+            continue;
+        }
+        Antrian(Pelanggan);
+        cout << "[D]ate [U]rgency [Q]ueue [E]xit" << endl <<
+                "Sort by:";
+    }
+}
+
+void RescheduleService(Service* Servis){
+    string new_date;
+    cout << "Masukkan Tanggal baru: ";
+    getline(cin, new_date);
+    new_date = CheckDate(new_date, Servis);
+    string nama = Servis->dataCustomer->nama;
+    string model = Servis->model_mobil;
+    string merek = Servis->merek_mobil;
+
+    SortByQueue();
+
+    Service* cur = headHistoryDue;
+    while (cur != NULL) {
+        if (cur->dataCustomer->nama == nama &&
+            cur->model_mobil == model &&
+            cur->merek_mobil == merek) {
+            cur->tanggal = new_date;
+            break;
+        }
+        cur = cur->allnext;
+    }
+    RewriteDue();
+}
+
+void DisplayReschedule(){
+    bool valid;
+    int index, pilihan;
+    Service* cur = headHistoryDue;
+    if (cur == NULL) {
+        cout << "No services :c\n\n";
+        return;
+    }
+    SortByDate();
+
+    ResetMontir();
+    UpdateMontir(headHistoryDue);
+    TampilMechanic();
+
+    string nama_montir = FindMechanicName(PilihMontir("Ganti Tanggal Ambil"));
+
+    do {
+        index = 0;
+        system("cls");
+        cout << "====== Ganti Tanggal Ambil ======\n";
+        cur = headHistoryDue;
+
+        while (cur != NULL) {
+            if (cur->nama_montir == nama_montir) {
+                cout << ++index << ". Servis ke-" << index  << ":" << endl;
+                DisplayServices(cur, "All", false, false, false);
+            }
+            cur = cur->allnext;
+        }
+        cout << "0. Keluar" << endl << endl;
+        cout << "Pilih Mobil yang ingin diundurkan: ";
+
+        while (!(cin >> pilihan)) { //false input, ulang
+            index = 0;
+            system("cls");
+            cout << "====== Ganti Tanggal Ambil ======\n";
+            cur = headHistoryDue;
+
+            while (cur != NULL) {
+                if (cur->nama_montir == nama_montir) {
+                    cout << ++index << ". Servis ke-" << index << ":" << endl;
+                    DisplayServices(cur, "All", false, false, false);
+                }
+                cur = cur->allnext;
+            }
+            cout << "0. Keluar" << endl << endl;
+            cout << "Pilih Mobil yang ingin diundurkan: ";
+            cin.clear(); // 1. Bersihkan status error cin
+            cin.ignore(1000, '\n'); // 2. Buang karakter sampah di buffer (maks 1000 karakter)
+        }
+        cin.ignore(1000, '\n');
+        if (pilihan == 0) return;
+        else if (pilihan < 0 || pilihan > index) valid = false; //false pilihan, ulang
+        else valid = true;
+    } while (!valid);
+
+    cur = headHistoryDue; //reset posisi cur
+    
+    int i = 0;
+    while (i < pilihan){
+        if (cur->nama_montir == nama_montir) i++;
+        if (i >= pilihan) break;
+        cur = cur->allnext;
+    }
+
+    RescheduleService(cur);
+    cout << "Servis " << cur->model_mobil << " berhasil di undur!!" << endl;
+
+}
+
 void CancelService(Customer* Pelanggan) {
     bool valid;
     int index, pilihan;
@@ -237,6 +466,9 @@ void CancelService(Customer* Pelanggan) {
         cout << "No services :c\n\n";
         return;
     }
+    //SortByQueue(); //queue
+    SortByDate();
+
     do {
         index = 1; //reset jika ga valid
         system("cls");
@@ -279,8 +511,8 @@ void CancelService(Customer* Pelanggan) {
     for (int i = 1; i < pilihan; i++) { //cari posisi dengan looping list sebanyak index pilihan - 1
         cur = cur->next;
     }   
-    ReLinkDue(cur);
-    RewriteDue();
+
+    RemoveDue(cur);
 
     Service* newUndo = cur;
     if (headUndo == NULL) { //new list (Undo)
@@ -308,27 +540,19 @@ void UndoCancelService(Customer* Pelanggan) {
 
     cout << "Apakah anda ingin membooking kembali servis ini? (yes/no): ";
     cin >> pilihan;
-    if (pilihan == "") return;
-    else if (pilihan == "yenos") {
+    if (pilihan == "no") return;
+    else if (pilihan == "yes") {
         cout << "Apakah ingin di reschedule? input (-) jika tidak" << endl 
-            << "Tanggal Lama: " << headUndo->tanggal << endl 
-            << "Tanggal Baru: ";
+            << "Tanggal Ambil Lama: " << headUndo->tanggal << endl 
+            << "Tanggal Ambil Baru: ";
         cin >> tanggal;
         cin.ignore();
-                // copy data
-        Service* copyService = new Service;
-        copyService->model_mobil = headUndo->model_mobil;
-        copyService->merek_mobil = headUndo->merek_mobil;
-        copyService->deskripsi_kendala = headUndo->deskripsi_kendala;
-        copyService->nama_montir = headUndo->nama_montir;
 
-        if (tanggal != "-") copyService->tanggal = tanggal;
-        else copyService->tanggal = headUndo->tanggal;
+        if (tanggal != "-") headUndo->tanggal = tanggal;
+        
+        AddDueFile(headUndo, Pelanggan);
 
-        AddDueList(copyService, Pelanggan);
-        RewriteDue();
-
-        cout << "\n\nServis " << copyService->model_mobil << " telah dibooking kembali" << endl << endl;
+        cout << "\n\nServis " << headUndo->model_mobil << " telah dibooking kembali" << endl << endl;
 
         Service* temp = headUndo; // hapus node lama
         headUndo = headUndo->next;
@@ -342,7 +566,7 @@ void RiwayatCustomer(Customer* Pelanggan) { //riwayat servis anda
     cout << "====== Riwayat Servis Anda ======" << endl << endl;
 
     cout << "====== Services =======" << endl;
-    if (Pelanggan->TailServiceDue == NULL && Pelanggan->HeadServiceDone == NULL)
+    if (Pelanggan->TailServiceDone == NULL && Pelanggan->HeadServiceDone == NULL)
         cout << "Empti servis :C";
     else {
         DisplayServices(Pelanggan->HeadServiceDone, "Customer", false); //update hanya yg sudah
@@ -361,31 +585,38 @@ void MechanicFinishJob(string nama) {
         if (cur->namaMontir == nama) break;
         cur = cur->next;
     }
-    Service* bantu = cur->kerjaTerlamaDue;
+    Service* bantu = cur->kerjaTerpentingDue;
     DisplayServices(bantu, "All", false, false);
     cout << endl << "Apakah servis ini sudah selesai? (yes/no) : ";
     cin >> pilihan;
-    if (pilihan == "yes") {
-        ofstream data_DoneService ("../data_DoneService.txt", ios::app); //terbaru di akhir data
-        data_DoneService << 
-        bantu->dataCustomer->nama << endl <<
-        bantu->model_mobil << endl <<
-        bantu->merek_mobil << endl <<
-        bantu->deskripsi_kendala << endl <<
-        bantu->nama_montir << endl <<
-        bantu->tanggal << endl << endl;
-
-        ReLinkDue(bantu);
-        RewriteDue();
-
-        AddDoneList(bantu, bantu->dataCustomer);
-    } 
+    if (pilihan == "yes") { 
+        SortByQueue();
+        AddDoneFile(bantu);
+    }
     else if (pilihan == "no") return;
     else {
         validPilihan = false;
         return;
     }
 }
+
+void DisplayFinishJob() {
+    if (headHistoryDue == NULL) {
+        cout << "====== Jobs Due ======\n" 
+                << "Empti :c\n\n";
+        return;
+    }
+    SortByUrgency();
+
+    ResetMontir();
+    UpdateMontir(headHistoryDue, true);
+
+    int index;
+    do {
+        index = PilihMontir("Finish Job");
+        MechanicFinishJob(FindMechanicName(index));
+    } while(!validPilihan);
+} 
 
 void MechanicJobsHistory(string nama) {
     if (nama == "Tidak ada") {
@@ -404,5 +635,24 @@ void MechanicJobsHistory(string nama) {
         curDone = curDone->allnext;
     }
 }
+
+void DisplayJobsHistory() {
+    if (headHistoryDue == NULL) {
+        cout << "====== Jobs Done ======\n" 
+                << "Empti :c\n\n";
+        return;
+    }
+    SortByDate();
+
+    ResetMontir();
+    UpdateMontir(tailHistoryDone, false, true); //dari terlama (Done = Stack, jadi tail = terlama)
+    UpdateMontir(headHistoryDue, false, false); //dari terlama (Due = Queue, jadi head =  terlama)
+                                                //dari terlama (Done lebih dahulu ada sebelum Due, harusnya)
+    int index;
+    do {
+        index = PilihMontir("Riwayat Kerja Montir");
+        MechanicJobsHistory(FindMechanicName(index));
+    } while(!validPilihan);
+} 
 
 #endif

@@ -15,82 +15,17 @@ Pilih menu?
 2. Servis Baru
 3. Selesaikan Pekerjaan
 4. Riwayat Kerja Montir
+5. Ganti Tanggal Ambil
 
 Pilihan: )";
     cin >> pilihan;
     cin.ignore();
     system("cls");
-    if (pilihan == "1") {
-        cout << "====== All Services ======\n";
-        if (headHistoryDue == NULL) {
-            cout << "Empti :c\n\n";
-            return;
-        }
-        DisplayServices(headHistoryDue, "All", false);
-    }
-    else if (pilihan == "2") {
-        NewService(false);
-    }
-    else if (pilihan == "3") {
-        if (headHistoryDue == NULL) {
-            cout << "====== Jobs Done======1\n" 
-                 << "Empti :c\n\n";
-            return;
-        }
-        
-        ResetMontir();
-        UpdateMontir(headHistoryDue, true, false);
-
-        int index;
-        do {
-            system("cls");
-            cout << "====== Jobs Done======2\n" <<
-            "Pilih Montir!\n\n";
-            TampilMechanic();
-            cout << "\nPilihan: ";
-            while (!(cin >> index)) { // Selama input BUKAN angka
-                system("cls");
-                cout << "====== Jobs Done======3\n" <<
-                "Pilih Montir!\n\n";
-                TampilMechanic();
-                cout << "\nPilihan: ";
-                cin.clear(); // 1. Bersihkan status error cin
-                cin.ignore(1000, '\n'); // 2. Buang karakter sampah di buffer (maks 1000 karakter)
-            }
-            cin.ignore(1000, '\n');
-            cout << endl;
-            validPilihan = true;
-            MechanicFinishJob(FindMechanicName(index));
-        } while(!validPilihan);
-    } 
-    else if (pilihan == "4") {
-
-        ResetMontir();
-        UpdateMontir(tailHistoryDone, false, true); //dari terlama (Done = Stack, jadi tail = terlama)
-        UpdateMontir(headHistoryDue, false, false); //dari terlama (Due = Queue, jadi head =  terlama)
-                                                    //dari terlama (Done lebih dahulu ada sebelum Due, harusnya)
-        int index;
-        do {
-            system("cls");
-            cout << "====== Riwayat Kerja Montir ======\n" <<
-            "Pilih Montir!\n\n";
-            TampilMechanic();                      
-            cout << "\nPilihan: ";
-            while (!(cin >> index)) { // Selama input BUKAN angka
-                system("cls");
-                cout << "====== Riwayat Kerja Montir ======\n" <<
-                "Pilih Montir!\n\n";
-                TampilMechanic();
-                cout << "\nPilihan: ";
-                cin.clear(); // 1. Bersihkan status error cin
-                cin.ignore(1000, '\n'); // 2. Buang karakter sampah di buffer (maks 1000 karakter)
-            }
-            cin.ignore(1000, '\n');
-            cout << endl;
-            validPilihan = true;
-            MechanicJobsHistory(FindMechanicName(index));
-        } while(!validPilihan);
-    } 
+    if (pilihan == "1") AntrianDisplay();
+    else if (pilihan == "2") NewService();
+    else if (pilihan == "3") DisplayFinishJob();
+    else if (pilihan == "4") DisplayJobsHistory();
+    else if (pilihan == "5") DisplayReschedule();
     else cout << "Pilihan tidak valid!\n\n";
 }
 
@@ -110,10 +45,9 @@ Pilihan : )";
     cin.ignore();
     system("cls");
     if (pilihan == "1") MenuServisAdmin();
-    else if (pilihan == "2") {
-        if (!NewCustomer())
+    else if (pilihan == "2") 
+        if (!NewCustomer(true))
             cout << "\nPelanggan telah terdaftar\n\n";
-    }
     else if (pilihan == "3") NewMontir();
     else if (pilihan == "4") {
         keluarAdmin = true;
@@ -127,7 +61,6 @@ Pilihan : )";
 
 void MenuCustomer(string namaCustomer) {
     Customer* curCustomer = headCustomer;
-    namaInput = namaCustomer;
     while(curCustomer != NULL) { //cek customer yang mana
         if (curCustomer->nama == namaCustomer) break;
         curCustomer = curCustomer->next;
@@ -151,8 +84,8 @@ Pilihan: )";
     cin.ignore();
     cout << endl;
     
-    if (pilihan == "1") Antrian(true, curCustomer);
-    else if (pilihan == "2") NewService(true, curCustomer);
+    if (pilihan == "1") AntrianDisplay(curCustomer);
+    else if (pilihan == "2") NewService(curCustomer);
     else if (pilihan == "3") {
         CancelService(curCustomer);
         return;
@@ -173,7 +106,5 @@ Pilihan: )";
     cout << "Press enter to go back...";
     cin.get();
 }
-
-
 
 #endif
