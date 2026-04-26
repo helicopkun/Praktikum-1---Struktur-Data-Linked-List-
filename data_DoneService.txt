@@ -3,14 +3,14 @@ SUV
 Mercedes
 Lompat
 Rafli
-24 Januari
+24-01-23
 
 Habibi
 SUV
 Pajero
 Kendalain
 Kevin
-11 Januari
+11-02-23
 
 D'Cipher
 Mobil emas
@@ -46,4 +46,25 @@ Toyota
 Burik
 Suby
 31-08-24
+
+Habibi
+Model 123
+Merek 082112
+Kendalain
+Suby
+18-10-25
+
+Mirza
+ABC
+DCE
+Klontong
+Faisal
+20-02-20
+
+Tiar
+awkjan
+iabdwad
+uuabwudbawd
+Jihan
+20-08-26
 

@@ -52,3 +52,9 @@ Female
 666
 Shinjuku
 
+Lorett
+20
+Male
+082120
+Dimana-mana
+

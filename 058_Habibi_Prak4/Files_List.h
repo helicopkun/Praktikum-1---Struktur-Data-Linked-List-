@@ -167,9 +167,6 @@ void AddDoneFile(Service* selesai){
     selesai->deskripsi_kendala << endl <<
     selesai->nama_montir << endl <<
     selesai->tanggal << endl << endl;
-
-    RemoveDue(selesai);
-
 }
 
 void ReadAllMontir() { //baca semua nama montir dalam file dan di simpan ke linkedlist

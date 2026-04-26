@@ -27,6 +27,7 @@ Pilihan: )";
     else if (pilihan == "4") DisplayJobsHistory();
     else if (pilihan == "5") DisplayReschedule();
     else cout << "Pilihan tidak valid!\n\n";
+    // cin.ignore(1000, '\n');
 }
 
 void MenuAdmin() {
@@ -49,14 +50,13 @@ Pilihan : )";
         if (!NewCustomer(true))
             cout << "\nPelanggan telah terdaftar\n\n";
     else if (pilihan == "3") NewMontir();
-    else if (pilihan == "4") {
-        keluarAdmin = true;
-        return;
-    }
+    else if (pilihan == "4") keluarAdmin = true;
+    
     else cout << "Pilihan tidak valid!\n\n";
     
+    cin.ignore(1000, '\n');
     cout << "Press enter to go back...";
-    cin.ignore();
+    cin.get();
 }
 
 void MenuCustomer(string namaCustomer) {
@@ -86,10 +86,7 @@ Pilihan: )";
     
     if (pilihan == "1") AntrianDisplay(curCustomer);
     else if (pilihan == "2") NewService(curCustomer);
-    else if (pilihan == "3") {
-        CancelService(curCustomer);
-        return;
-    }
+    else if (pilihan == "3") CancelService(curCustomer);
     else if (pilihan == "4") UndoCancelService(curCustomer);
     else if (pilihan == "5") RiwayatCustomer(curCustomer);
     else if (pilihan == "6") {
@@ -103,6 +100,7 @@ Pilihan: )";
     }
     else cout << "Pilihan tidak valid!\n\n";
 
+    cin.ignore(1000, '\n');
     cout << "Press enter to go back...";
     cin.get();
 }

@@ -5,6 +5,7 @@
 #include <iostream>
 
 bool validPilihan;
+string namaInput;
 
 void NewMontir() {
     string nama;
@@ -92,7 +93,7 @@ string CheckDate(string new_date, Service* Servis = NULL, int count = 0){ // inc
                 bulan_baru = bulan;
                 tahun_baru = tahun;
             }
-            cout << "\nTidak bisa sebelum jadwal awal anda.\n";
+            cout << "\nTidak bisa sebelum jadwal awal " << Servis->dataCustomer->nama << ".\n";
         }
     }
     Service* cur = headHistoryDue;
@@ -107,7 +108,7 @@ string CheckDate(string new_date, Service* Servis = NULL, int count = 0){ // inc
     }
 
     if (valid) {  //base case
-        cout << "\nTanggal ambil yang baru adalah " << new_date << endl << endl;
+        if (count > 0) cout << "\nTanggal ambil yang baru adalah " << new_date << endl << endl;
         return new_date;
     }
     else { 
@@ -129,8 +130,6 @@ string CheckDate(string new_date, Service* Servis = NULL, int count = 0){ // inc
 }
 
 bool NewCustomer(bool AskName) { //tambah di belakang list - queue
-    string namaInput;
-
     if (AskName) {
         cout << "Nama Pelanggan: ";
         getline(cin, namaInput);
@@ -161,8 +160,9 @@ bool NewCustomer(bool AskName) { //tambah di belakang list - queue
 }
 
 void NewService(Customer* Pelanggan = NULL) {
+    namaInput = "";
     int index, antrian;
-    string namaInput, model, merek, kendala;
+    string model, merek, kendala;
 
     cout << "====== New Service ======" << endl;
     cout << "Model Mobil: ";
@@ -255,7 +255,7 @@ void NewService(Customer* Pelanggan = NULL) {
     else
         baruService->tanggal = CheckDate(tanggal);
 
-    
+    SortByQueue();
     if (Pelanggan) { //kalo dari "menu booking customer" tidak perlu cek / daftar ulang
         AddDueFile(baruService, Pelanggan);
         cout << "Servis sudah tercatat, nomor antrian anda adalah: " << antrian << "\n\n\n";
@@ -346,29 +346,24 @@ void AntrianDisplay(Customer* Pelanggan = NULL){ //full display
     cout << "[D]ate [U]rgency [Q]ueue [E]xit" << endl <<
             "Sort by:";
     while (cin >> sort){
-        system("cls");
         sort = (char)toupper(sort);
         if (sort == 'E') break;
-        else if (sort == 'Q') SortByQueue();
+        system("cls");
+        if (sort == 'Q') SortByQueue();
         else if (sort == 'D') SortByDate();
         else if (sort == 'U') SortByUrgency();
-        else {
-            Antrian(Pelanggan);
-            cout << "[D]ate [U]rgency [Q]ueue [E]xit" << endl <<
-                "Sort by:";
-            continue;
-        }
         Antrian(Pelanggan);
         cout << "[D]ate [U]rgency [Q]ueue [E]xit" << endl <<
                 "Sort by:";
     }
+    
 }
 
 void RescheduleService(Service* Servis){
     string new_date;
     cout << "Masukkan Tanggal baru: ";
     getline(cin, new_date);
-    new_date = CheckDate(new_date, Servis);
+    new_date = CheckDate(new_date, Servis); // parameter Servis for blocking earlier dates
     string nama = Servis->dataCustomer->nama;
     string model = Servis->model_mobil;
     string merek = Servis->merek_mobil;
@@ -400,7 +395,6 @@ void DisplayReschedule(){
 
     ResetMontir();
     UpdateMontir(headHistoryDue);
-    TampilMechanic();
 
     string nama_montir = FindMechanicName(PilihMontir("Ganti Tanggal Ambil"));
 
@@ -453,8 +447,9 @@ void DisplayReschedule(){
         cur = cur->allnext;
     }
 
+    string model = cur->model_mobil;
     RescheduleService(cur);
-    cout << "Servis " << cur->model_mobil << " berhasil di undur!!" << endl;
+    cout << "Servis " << model << " berhasil di undur!!" << endl;
 
 }
 
@@ -523,9 +518,7 @@ void CancelService(Customer* Pelanggan) {
         headUndo = newUndo;
     }
     
-    cout << "\nServis " << cur->model_mobil << " telah dibatalkan" << endl << endl
-        << "Press enter to go back...";
-    cin.get();
+    cout << "\nServis " << cur->model_mobil << " telah dibatalkan" << endl << endl;
 }
 
 void UndoCancelService(Customer* Pelanggan) {
@@ -538,28 +531,30 @@ void UndoCancelService(Customer* Pelanggan) {
 
     DisplayServices(headUndo, "Customer", false, false, false);
 
-    cout << "Apakah anda ingin membooking kembali servis ini? (yes/no): ";
-    cin >> pilihan;
+    do {
+        cout << "Apakah anda ingin membooking kembali servis ini? (yes/no): ";
+        cin >> pilihan;
+    } while (pilihan != "yes" && pilihan != "no");
+
     if (pilihan == "no") return;
-    else if (pilihan == "yes") {
-        cout << "Apakah ingin di reschedule? input (-) jika tidak" << endl 
-            << "Tanggal Ambil Lama: " << headUndo->tanggal << endl 
-            << "Tanggal Ambil Baru: ";
-        cin >> tanggal;
-        cin.ignore();
 
-        if (tanggal != "-") headUndo->tanggal = tanggal;
-        
-        AddDueFile(headUndo, Pelanggan);
+    cout << "Apakah ingin di reschedule? input (-) jika tidak" << endl 
+        << "Tanggal Ambil Lama: " << headUndo->tanggal << endl 
+        << "Tanggal Ambil Baru: ";
+    cin >> tanggal;
+    cin.ignore();
 
-        cout << "\n\nServis " << headUndo->model_mobil << " telah dibooking kembali" << endl << endl;
+    if (tanggal != "-") headUndo->tanggal = tanggal;
+    
+    AddDueFile(headUndo, Pelanggan);
 
-        Service* temp = headUndo; // hapus node lama
-        headUndo = headUndo->next;
-        if (headUndo != NULL) headUndo->prev = NULL;
-        delete temp;
+    cout << "\n\nServis " << headUndo->model_mobil << " telah dibooking kembali" << endl << endl;
 
-    } else UndoCancelService(Pelanggan);
+    Service* temp = headUndo; // hapus node lama
+    headUndo = headUndo->next;
+    if (headUndo != NULL) headUndo->prev = NULL;
+    delete temp;
+
 }
 
 void RiwayatCustomer(Customer* Pelanggan) { //riwayat servis anda
@@ -589,9 +584,25 @@ void MechanicFinishJob(string nama) {
     DisplayServices(bantu, "All", false, false);
     cout << endl << "Apakah servis ini sudah selesai? (yes/no) : ";
     cin >> pilihan;
-    if (pilihan == "yes") { 
-        SortByQueue();
+    if (pilihan == "yes") {
         AddDoneFile(bantu);
+
+        string nama = bantu->dataCustomer->nama;
+        string model = bantu->model_mobil;
+        string merek = bantu->merek_mobil;
+
+        SortByQueue();
+
+        Service* cur = headHistoryDue;
+        while (cur != NULL) {
+            if (cur->dataCustomer->nama == nama &&
+                cur->model_mobil == model &&
+                cur->merek_mobil == merek) {
+                RemoveDue(cur);
+                break;
+            }
+            cur = cur->allnext;
+        }
     }
     else if (pilihan == "no") return;
     else {
@@ -637,7 +648,7 @@ void MechanicJobsHistory(string nama) {
 }
 
 void DisplayJobsHistory() {
-    if (headHistoryDue == NULL) {
+    if (headHistoryDue == NULL && headHistoryDone == NULL) {
         cout << "====== Jobs Done ======\n" 
                 << "Empti :c\n\n";
         return;
